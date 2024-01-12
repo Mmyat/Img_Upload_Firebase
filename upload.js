@@ -3,32 +3,27 @@ const multer = require('multer');
 const axios = require('axios');
 var admin = require("firebase-admin");
 const firebase = require("firebase")
-var serviceAccount = require("../../Mypj/Key/product-shop-43203-firebase-adminsdk-ppzcj-bd5e36e414.json");
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://product-shop-43203-default-rtdb.firebaseio.com",
-  storageBucket: "gs://product-shop-43203.appspot.com",
-});
-
-
+var serviceAccount = require("../../My Pj/Key/product-shop-43203-firebase-adminsdk-ppzcj-0fe0ee0d04.json");
+//
 const app = express();
+app.use(express.json());
+app.use(cors());
+app.use(express.urlencoded({ extended: true }));
 const port = 3000;
-const fireStorage = firebase.storage().ref();
 // Multer setup
 const storage = multer.memoryStorage();
-const upload = multer({ storage: storage , limits: { fileSize: 1024 * 1024 * 10 }});
+const upload = multer({ storage: storage});
 // Express route for file upload
 app.post('/upload', upload.single('file'),async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).send('No file uploaded.');
     }
-
+    const firebase = require('../db');  // reference to our db 
+    const firestorage = firebase.firestore().ref();
     const fileBuffer = req.file.buffer;
     const fileName = req.file.originalname;
-    var bucket = admin.storage().bucket();
-    const imageRef = fireStorage.child(fileName);
+    const imageRef = firestorage.child(fileName);
     //
     await imageRef.put(fileBuffer);
     // Upload file to Firebase Storage using Axios
