@@ -1,64 +1,32 @@
 // app.js
 const express = require('express');
-const multer = require('multer');
-const { MongoClient } = require('mongodb');
-const path = require('path');
-
+const axios = require('axios')
 const app = express();
 const port = 3000;
 
-// Configure Multer for file upload
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
-
-// MongoDB Connection
-const uri = 'mongodb+srv://myo_myat_zaw_guru:z9sUTVdXKfbZREAQ@cluster0.woecefd.mongodb.net/?retryWrites=true&w=majority';
-const dbName = 'images';
-const db = MongoClient.db(dbName);
-MongoClient.connect(uri, (err, client) => {
-  if (err) {
-    console.error(err);
-    return;
-  }
-
-  console.log('Connected to MongoDB');
-});
-  // Set up routes
-  app.post('/upload', upload.single('image'), (req, res) => {
-    if (!req.file) {
+// Set up routes
+app.post('/upload', async(req, res) => {
+    if (req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
-
-    const collection = db.collection('images');
-    const { originalname, buffer } = req.file;
-
-    collection.insertOne({ name: originalname, image: buffer }, (err, result) => {
-      if (err) {
-        return res.status(500).json({ message: 'Error storing image in database' });
+    try{
+      const url = 'gs://product-shop-43203.appspot.com';
+      const newImage = req.file
+      const config = {
+          headers: {
+              'content-type': 'multipart/form-data'
+          }
       }
-
-      res.status(201).json({ message: 'Image uploaded successfully', fileId: result.insertedId });
-    });
-  });
-
-  app.get('/images/:id', (req, res) => {
-    const collection = db.collection('images');
-    const fileId = req.params.id;
-
-    collection.findOne({ _id: new MongoClient.ObjectId(fileId) }, (err, result) => {
-      if (err) {
-        return res.status(500).json({ message: 'Error retrieving image from database' });
-      }
-
-      if (!result) {
-        return res.status(404).json({ message: 'Image not found' });
-      }
-
-      res.setHeader('Content-Type', 'image/jpeg');
-      res.send(result.image);
-    });
-  });
-
+      await  axios.post(url, newImage,config)
+      res.status(201).json({ message: 'Image uploaded successfully'});
+    }
+    catch(error){
+      return res.status(500).json({ message: error });
+    }
+  })
+  app.get('/upload',(req,res)=>{
+    res.send("Hello Requester")
+})
   app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
   });
