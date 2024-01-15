@@ -1,16 +1,20 @@
 const express = require('express');
 const multer = require('multer');
 const admin = require('firebase-admin');
-const serviceAccount = require('../Key/product-shop-43203-firebase-adminsdk-ppzcj-bd5e36e414.json');
+const serviceAccount = require('../../My Pj/Key/product-shop-43203-firebase-adminsdk-ppzcj-0fe0ee0d04.json');
 const uuid = require('uuid-v4')
 const app = express();
-const axios = require('axios');
+const cors = require('cors')
 // Initialize Firebase Admin SDK
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://product-shop-43203-default-rtdb.firebaseio.com",
   storageBucket: "product-shop-43203.appspot.com",
 });
+
+//
+app.use(cors());
+const PORT = 3000;
 
 // Set up Multer for handling file uploads
 const storage = multer.memoryStorage();
@@ -46,7 +50,7 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
 //Stream success Response
     fileStream.on('finish', () => {
       const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${uniqueFileName}?alt=media&token=${token}`
-      res.status(201).send(imageUrl);
+      res.status(201).send({'imageUrl': imageUrl});
     });
 //Stream end
     fileStream.end(fileBuffer);
@@ -56,7 +60,6 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
   }
 });
 
-const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
